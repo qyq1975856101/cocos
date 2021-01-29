@@ -41,11 +41,41 @@ cc.Class({
         return cc.tween().repeatForever(tween);
     },
 
+    onKeyDown(event){
+        switch(event.keyCode){
+            case cc.macro.KEY.a:
+                this.accLeft = true;
+                break;
+            case cc.macro.KEY.d:
+                this.accRight = true;
+                break;
+        }
+    },
+    onKeyUp(event){
+        switch(event.keyCode){
+            case cc.macro.KEY.a:
+                this.accLeft = false;
+                break;
+            case cc.macro.KEY.d:
+                this.accRight = false;
+                break;
+        }
+    },
+
     // LIFE-CYCLE CALLBACKS:
 
     onLoad () {
         var Jump = this.runJumpAction();
         cc.tween(this.node).then(Jump).start();
+
+        this.accLeft = false;
+        this.accRight = false;
+        this.moveSpeed = 0;
+
+        // 初始化键盘输入监听
+        cc.systemEvent.on(cc.SystemEvent.EventType.KEY_DOWN, this.onKeyDown, this);
+        cc.systemEvent.on(cc.SystemEvent.EventType.KEY_UP, this.onKeyUp, this);   
+
     },
 
 
@@ -53,5 +83,23 @@ cc.Class({
 
     },
 
-    // update (dt) {},
+    update (dt) {
+        if(this.accLeft){
+            this.moveSpeed -= this.accel*dt;
+        }
+        else if(this.accRight){
+            this.moveSpeed += this.accel*dt;
+        }
+        if(Math.abs(this.moveSpeed)>this.maxMoveSpeed){
+            this.moveSpeed = this.maxMoveSpeed*this.moveSpeed/Math.abs(this.moveSpeed);
+        }
+
+        this.node.x += this.moveSpeed*dt;
+    },
+
+    
+    onDestroy () {
+        cc.systemEvent.off(cc.SystemEvent.EventType.KEY_DOWN, this.onKeyDown, this);
+        cc.systemEvent.off(cc.SystemEvent.EventType.KEY_UP, this.onKeyUp ,this)
+    }
 });
